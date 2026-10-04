@@ -1,0 +1,14 @@
+name: mnist-ft3
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip=23.3.2
+  - cudatoolkit=11.2
+  - cudnn=8.1
+  - pip:
+      - tensorflow==2.10.1
+      - numpy==1.23.5
+      - matplotlib==3.6.3
+      - Pillow==9.5.0
+      - ipykernel==6.29.5

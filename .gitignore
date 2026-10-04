@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 .git-local/
+data/
 __pycache__/
 *.py[cod]
 .venv/
