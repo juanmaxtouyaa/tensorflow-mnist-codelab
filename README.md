@@ -1,108 +1,101 @@
-# TensorFlow/Keras MNIST Codelab
+# Codelab TensorFlow/Keras MNIST sur FinisTerrae III
 
-Completed notebooks for Google's [TensorFlow, Keras and deep learning, without a PhD](https://codelabs.developers.google.com/codelabs/cloud-tensorflow-mnist) codelab.
+Notebooks du codelab Google [TensorFlow, Keras et deep learning, sans doctorat](https://codelabs.developers.google.com/codelabs/cloud-tensorflow-mnist?hl=fr)
+(dossier `tensorflow-mnist-tutorial` de
+[GoogleCloudPlatform/tensorflow-without-a-phd](https://github.com/GoogleCloudPlatform/tensorflow-without-a-phd)).
 
-The notebooks follow the codelab's progression from a basic one-layer classifier to a convolutional network with dropout and batch normalization.
+L'étape 14 du codelab propose d'entraîner le modèle dans le cloud sur du matériel
+puissant. Ici, ce rôle est joué par un GPU NVIDIA A100 du supercalculateur
+FinisTerrae III (CESGA). Tous les notebooks ont été exécutés sur ce GPU et
+**toutes les sorties sont enregistrées dans les fichiers `.ipynb`** : il suffit de les
+ouvrir sur GitHub, sans rien relancer.
 
-## Notebooks
+## Résultats
 
-| Notebook | Codelab stage | Main model changes |
-| --- | --- | --- |
-| `keras_01_mnist.ipynb` | Sections 3 and 5 | Baseline softmax classifier trained with SGD |
-| `keras_02_mnist_dense.ipynb` | Sections 6 and 7 | Dense ReLU layers and the Adam optimizer |
-| `keras_03_mnist_dense_lrdecay_dropout.ipynb` | Sections 8 and 9 | Exponential learning-rate decay and 25% dropout |
-| `keras_04_mnist_convolutional.ipynb` | Sections 11 and 12 | Three convolutional layers and 40% dropout |
-| `keras_05_mnist_batch_norm.ipynb` | Section 13 | Batch normalization, adjusted decay, and 30% dropout |
+Exécution du 4 octobre 2026 (job Slurm 10308194), 10 époques par notebook.
 
-Sections 1–2 introduce the environment, sections 4 and 10 explain the underlying concepts, and sections 14–15 cover cloud training and the conclusion.
+| Notebook | Étapes du codelab | Modèle | Précision de validation finale | Attendu (codelab) | Temps d'exécution |
+| --- | --- | --- | ---: | ---: | ---: |
+| [`keras_01_mnist.ipynb`](keras_01_mnist.ipynb) | 3 et 5 | Une couche dense softmax, SGD | **89,69 %** | ~90 % | 33 s |
+| [`keras_02_mnist_dense.ipynb`](keras_02_mnist_dense.ipynb) | 6 et 7 | Couches denses ReLU, Adam | **97,84 %** | ~97 % | 25 s |
+| [`keras_03_mnist_dense_lrdecay_dropout.ipynb`](keras_03_mnist_dense_lrdecay_dropout.ipynb) | 8 et 9 | Décroissance du taux d'apprentissage, dropout 25 % | **97,87 %** | ~98 % | 26 s |
+| [`keras_04_mnist_convolutional.ipynb`](keras_04_mnist_convolutional.ipynb) | 11 et 12 | Trois couches convolutives, dropout 40 % | **99,05 %** | > 99 % | 59 s |
+| [`keras_05_mnist_batch_norm.ipynb`](keras_05_mnist_batch_norm.ipynb) | 13 | Convolutions + batch normalization | **99,49 %** | ~99,5 % | 55 s |
 
-## Environment and data
+- **Temps total** : 198 s pour les cinq notebooks (3 min 34 s pour le job Slurm complet).
+- La précision de validation est celle de la dernière époque (`val_accuracy`),
+  calculée sur les 10 000 images du jeu de test MNIST, que le codelab appelle
+  « validation ».
+- Les résultats varient légèrement d'une exécution à l'autre (initialisation
+  aléatoire, mélange des données, dropout).
+- Les étapes 1–2, 4, 10 et 15 du codelab sont des étapes d'introduction, de théorie
+  ou de conclusion, sans notebook propre.
 
-The notebooks are Jupyter (`.ipynb`) files. They require Python, TensorFlow,
-NumPy, Matplotlib, Pillow, and IPython. [`environment.yml`](environment.yml)
-records a Python 3.10 / TensorFlow 2.10.1 environment with CUDA 11.2 and
-cuDNN 8.1 for a single NVIDIA GPU. This version choice follows the CUDA 11.2
-stack in the [CESGA FT3 A100 guide](https://cesga-docs.gitlab.io/ft3-user-guide/gpu_nodes.html)
-and TensorFlow's [tested build configurations](https://www.tensorflow.org/install/source#gpu).
-The actual driver and module versions must still be checked on FT3 before a GPU
-run; the environment has not been tested on that cluster yet.
+## Environnement d'exécution
 
-Run `python scripts/download_mnist.py` once before opening a notebook. The script
-downloads the four original MNIST IDX files from the [CVDF mirror used by
-TensorFlow Datasets](https://github.com/tensorflow/datasets/blob/master/tensorflow_datasets/image_classification/mnist.py),
-checks SHA-256 digests, and expands them into `data/mnist/`. Data is ignored by
-Git. Each notebook reads from `data/mnist/` by default, or from the directory
-named in `MNIST_DATA_DIR`. Download on a node with internet access before
-starting a compute job.
+| | |
+| --- | --- |
+| Machine | FinisTerrae III (CESGA), nœud `a100-29`, partition `short` |
+| GPU (`nvidia-smi`) | 1 × NVIDIA A100-PCIE-40GB, pilote 570.86.15 |
+| Ressources Slurm | `--gres=gpu:a100:1 -c 32 --mem=64G -t 00:45:00` |
+| TensorFlow | 2.10.1 (module CESGA `tensorflow/2.10.1-gpu-conda`, CUDA 11.2, Keras 2.10) |
+| Python | 3.10.15 |
+| Paquets ajoutés | [`requirements.txt`](requirements.txt) : matplotlib, Pillow, ipykernel, nbconvert |
 
-The notebooks call the 10,000-image MNIST **test** split `validation` because
-that is how the original codelab names it. Their reported validation accuracy
-is therefore test-set accuracy, not an independent validation estimate.
+TensorFlow 2.10 a été choisi car c'est une version fournie par le CESGA pour les
+A100, et Keras 2 est le plus proche de la version d'origine du codelab
+(TensorFlow 2.2) : le code n'a presque pas besoin d'être modifié.
 
-## Running on CESGA FinisTerrae III
+## Modifications par rapport au codelab
 
-CESGA's [module guide](https://cesga-docs.gitlab.io/ft3-user-guide/env_modules.html)
-recommends its `cesga/system` Miniconda module and storing Conda environments in
-`$STORE`. From the repository directory on FT3, use the installed Miniconda
-module version shown by `module spider`:
+Le code et la structure des notebooks sont ceux du codelab. Chaque modification est
+signalée dans le notebook par une note « **Modification** » juste avant la cellule
+concernée :
+
+- **Données** : le bucket `gs://mnist-public` n'est plus accessible publiquement
+  (erreur 403). Les mêmes fichiers MNIST au format IDX sont téléchargés depuis le
+  miroir CVDF de Google par [`scripts/download_mnist.py`](scripts/download_mnist.py)
+  (avec vérification SHA-256) dans `data/mnist/` (non versionné). Seuls les
+  chemins `gs://mnist-public/` → `data/mnist/` ont changé.
+- **Compatibilité** avec les versions récentes de NumPy, Matplotlib et Keras :
+  `np.float` → `float`, `plt.grid(b=None)` → `plt.grid(False)`,
+  `Adam(lr=0.01)` → `Adam(learning_rate=0.01)`.
+- **Exercice du codelab** : `Dropout(0.4)` ajouté au réseau convolutif (notebook 04).
+
+Remarques sur les sorties :
+
+- Seule la ligne de la dernière époque reste affichée : la fonction de rappel
+  `PlotTraining` du codelab efface la sortie à chaque époque pour redessiner les
+  courbes d'entraînement, qui montrent, elles, toutes les époques.
+- Les messages de TensorFlow sur fond rouge (oneDNN, `cuBLAS factory`,
+  `cache_dataset_ops`) sont des avertissements sans effet sur les résultats. On y
+  voit aussi la ligne `Created device ... NVIDIA A100-PCIE-40GB`, qui confirme que
+  l'entraînement s'est fait sur le GPU.
+
+## Relancer l'exécution
+
+Préparation, une seule fois, sur un nœud de connexion de FinisTerrae III (accès à
+Internet) :
 
 ```bash
 module load cesga/system
-module spider miniconda3
-module load miniconda3/<version-shown-by-spider>
-mkdir -p "$STORE/.conda/pkgs" "$STORE/.cache/pip"
-export CONDA_PKGS_DIRS="$STORE/.conda/pkgs"
-export PIP_CACHE_DIR="$STORE/.cache/pip"
-conda env create --prefix "$STORE/envs/mnist-ft3" --file environment.yml
-conda activate "$STORE/envs/mnist-ft3"
-python -m ipykernel install --user --name mnist-ft3 --display-name "Python (mnist-ft3)"
-python scripts/download_mnist.py --dest "$STORE/datasets/mnist"
+module load tensorflow/2.10.1-gpu-conda
+python -m venv --system-site-packages "$STORE/envs/mnist-tf210"
+source "$STORE/envs/mnist-tf210/bin/activate"
+pip install -r requirements.txt
+python scripts/download_mnist.py
 ```
 
-For a GPU session, follow CESGA's [Jupyter instructions](https://cesga-docs.gitlab.io/ft3-user-guide/remote_desktops.html)
-to request a compute node and start JupyterLab there. A login node is not a
-training node. Set the data path before launching JupyterLab, select the
-`Python (mnist-ft3)` kernel, and run cells from top to bottom:
+Ensuite, depuis le dossier du dépôt, une seule commande exécute les cinq notebooks
+sur un A100 et enregistre les sorties dans les fichiers `.ipynb` :
 
 ```bash
-compute --gpu
-module load cesga/system
-module load miniconda3/<version-shown-by-spider>
-conda activate "$STORE/envs/mnist-ft3"
-export LD_LIBRARY_PATH="$CONDA_PREFIX/lib:${LD_LIBRARY_PATH:-}"
-export MNIST_DATA_DIR="$STORE/datasets/mnist"
-nvidia-smi
-python -c 'import tensorflow as tf; print(tf.__version__, tf.config.list_physical_devices("GPU"))'
-start_jupyter-lab
+sbatch run_notebooks.sbatch
 ```
 
-`compute --gpu` requests a GPU; check `nvidia-smi` to see which model FT3
-allocated. CESGA shows this command under its T4 guidance. For an A100,
-use CESGA's [A100 resource request guidance](https://cesga-docs.gitlab.io/ft3-user-guide/gpu_nodes.html)
-and check `compute --help` for the site's interactive options. TensorFlow must list a GPU
-before training; otherwise the notebook may run on CPU. CESGA's Jupyter URL
-requires its VPN outside a remote desktop.
+Le journal du job est écrit dans `logs/`. Pour un seul notebook :
+`sbatch run_notebooks.sbatch keras_01_mnist.ipynb`.
 
-## Expected progression
+## Licence
 
-The codelab gives these approximate validation milestones. Results vary between runs because model initialization, shuffling, and dropout are stochastic. The saved output in notebook 03 reports 97.75% validation accuracy for one run with dropout.
-
-| Stage | Expected validation accuracy |
-| --- | ---: |
-| Baseline softmax model | About 90% |
-| Dense ReLU model | About 97% |
-| Learning-rate decay stage, before dropout | Above 98% |
-| Convolutional model with dropout | Above 99% |
-| Batch-normalized model | Up to about 99.5% |
-
-## Compatibility notes
-
-The original codelab targeted TensorFlow 2.2. The notebooks retain the original structure and learning progression, with only small compatibility updates for current environments:
-
-- `np.float` was replaced with the built-in `float` type.
-- The current Matplotlib grid argument is used.
-- Adam's `learning_rate` argument replaces the old `lr` alias.
-
-## License
-
-The notebooks retain their original Google Apache 2.0 license notices.
+Les notebooks conservent leur licence d'origine (Apache 2.0, Google LLC).
