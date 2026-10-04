@@ -1,0 +1,6 @@
+# Paquets ajoutés au module CESGA tensorflow/2.10.1-gpu-conda
+# (TensorFlow et NumPy viennent du module).
+matplotlib==3.8.4
+Pillow==10.4.0
+ipykernel==6.29.5
+nbconvert==7.16.4
