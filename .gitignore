@@ -1,0 +1,15 @@
+.ipynb_checkpoints/
+.git-local/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+Thumbs.db
+.idea/
+*~
+*.swp
+*.swo
+*.bak
+*.orig
+*.zip
